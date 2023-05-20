@@ -1,0 +1,42 @@
+from qiskit import QuantumCircuit, execute, Aer
+from qiskit.visualization import plot_histogram
+
+def quantum_walk(steps):
+    n = steps * 2 + 1  # Número total de posiciones en la línea
+
+    # Crear el circuito cuántico
+    circuit = QuantumCircuit(n)
+
+    # Estado inicial
+    circuit.x(steps)  # La partícula comienza en la posición central
+
+    # Aplicar las compuertas de caminata cuántica
+    for _ in range(steps):
+        # Operación de la moneda
+        circuit.h(range(n))
+        circuit.z(range(n))
+        circuit.cz(range(n-1), range(1, n))
+
+        # Operación de desplazamiento
+        circuit.swap(0, steps)
+        circuit.swap(steps, n-1)
+
+    # Medir todas las posiciones
+    circuit.measure_all()
+
+    # Ejecutar el circuito en un simulador cuántico
+    simulator = Aer.get_backend('qasm_simulator')
+    job = execute(circuit, simulator, shots=1024)
+    result = job.result()
+    counts = result.get_counts()
+
+    return counts
+
+# Ejemplo de uso
+steps = 5
+counts = quantum_walk(steps)
+
+# Imprimir las probabilidades de cada posición
+for position, count in counts.items():
+    probability = count / 1024
+    print(f"Posición {position}: {probability}")
